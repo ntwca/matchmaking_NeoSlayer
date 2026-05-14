@@ -5,37 +5,41 @@ const path = require("path");
 const iniparser = require("ini");
 const config = iniparser.parse(fs.readFileSync(path.join(__dirname, "..", "Config", "config.ini")).toString());
 const functions = require("./functions.js");
-const lawinSignals = require("./lawinClientSignals.js");
+const neoSlayerClientSignals = require("./neoSlayerClientSignals.js");
 
 // Used by NeoSlayer client (HTTP poll) during "searching for match" (Jouer).
-let lawinMatchmakingPartySearchActive = false;
-let lawinMatchmakingLastSearchPulseMs = 0;
-const LAWIN_SEARCH_ACTIVE_WINDOW_MS = 300000;
+let neoSlayerMatchmakingPartySearchActive = false;
+let neoSlayerMatchmakingLastSearchPulseMs = 0;
+const NEO_SLAYER_SEARCH_ACTIVE_WINDOW_MS = 300000;
 
-function refreshLawinMatchmakingSearchPulse() {
-    lawinMatchmakingPartySearchActive = true;
-    lawinMatchmakingLastSearchPulseMs = Date.now();
+function refreshNeoSlayerMatchmakingSearchPulse() {
+    neoSlayerMatchmakingPartySearchActive = true;
+    neoSlayerMatchmakingLastSearchPulseMs = Date.now();
     try {
-        lawinSignals.onTryPlayOnPlatform();
+        neoSlayerClientSignals.onTryPlayOnPlatform();
     } catch (e) {
         /* optional */
     }
 }
 
-function lawinMatchmakingSearchingForClient() {
-    if (!lawinMatchmakingPartySearchActive)
+function neoSlayerMatchmakingSearchingForClient() {
+    if (!neoSlayerMatchmakingPartySearchActive)
         return false;
-    return Date.now() - lawinMatchmakingLastSearchPulseMs < LAWIN_SEARCH_ACTIVE_WINDOW_MS;
+    return Date.now() - neoSlayerMatchmakingLastSearchPulseMs < NEO_SLAYER_SEARCH_ACTIVE_WINDOW_MS;
 }
 
-express.get("/lawin/internal/matchmaking/searching", (req, res) => {
+function sendNeoSlayerMatchmakingSearchingJson(req, res) {
     res.type("application/json");
     res.json({
-        searching: lawinMatchmakingSearchingForClient(),
-        tryPlayClick: lawinSignals.tryPlayClickActiveForClient(),
-        tryPlaySeq: lawinSignals.getTryPlaySeq(),
+        searching: neoSlayerMatchmakingSearchingForClient(),
+        tryPlayClick: neoSlayerClientSignals.tryPlayClickActiveForClient(),
+        tryPlaySeq: neoSlayerClientSignals.getTryPlaySeq(),
     });
-});
+}
+
+express.get("/neoslayer/internal/matchmaking/searching", sendNeoSlayerMatchmakingSearchingJson);
+// Legacy path (older Erbium builds still poll /lawin/...).
+express.get("/lawin/internal/matchmaking/searching", sendNeoSlayerMatchmakingSearchingJson);
 
 function matchmakingServiceUrl() {
     const gsIp = (config.GameServer && config.GameServer.ip) ? String(config.GameServer.ip).trim() : "";
@@ -54,7 +58,7 @@ express.get("/fortnite/api/matchmaking/session/findPlayer/*", async (req, res) =
 })
 
 express.get("/fortnite/api/game/v2/matchmakingservice/ticket/player/*", async (req, res) => {
-    refreshLawinMatchmakingSearchPulse();
+    refreshNeoSlayerMatchmakingSearchPulse();
     res.cookie("currentbuildUniqueId", req.query.bucketId.split(":")[0]);
 
     res.json({
@@ -119,13 +123,13 @@ express.get("/fortnite/api/matchmaking/session/:session_id", async (req, res) =>
 })
 
 express.post("/fortnite/api/matchmaking/session/*/join", async (req, res) => {
-    lawinMatchmakingPartySearchActive = false;
+    neoSlayerMatchmakingPartySearchActive = false;
     res.status(204);
     res.end();
 })
 
 express.post("/fortnite/api/matchmaking/session/matchMakingRequest", async (req, res) => {
-    refreshLawinMatchmakingSearchPulse();
+    refreshNeoSlayerMatchmakingSearchPulse();
     res.json([])
 })
 
