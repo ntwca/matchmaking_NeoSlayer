@@ -1,5 +1,5 @@
 
-« Le matchmaking NeoSlayer, qui lance les saisons 1 à 40, est en 127.0.0.1. Ajoute ce code dans ton fichier matchmaking.js. »
+« Le matchmaking NeoSlayer, qui lance les saisons 1 à 40, est en 127.0.0.1. Ajoute ce code dans ton fichier matchmaking.js de ton backend  »
 
 
 
