@@ -7,7 +7,7 @@ const config = iniparser.parse(fs.readFileSync(path.join(__dirname, "..", "Confi
 const functions = require("./functions.js");
 const lawinSignals = require("./lawinClientSignals.js");
 
-// Used by Neoslayer client (HTTP poll) during "searching for match" (Jouer).
+// Used by NeoSlayer client (HTTP poll) during "searching for match" (Jouer).
 let lawinMatchmakingPartySearchActive = false;
 let lawinMatchmakingLastSearchPulseMs = 0;
 const LAWIN_SEARCH_ACTIVE_WINDOW_MS = 300000;
